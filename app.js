@@ -10,7 +10,12 @@ const app = express();
 
 // Morgan is the loggin middleware. Calling morgan() function returns another middleware function
 // that is added to the middleware stack.
-app.use(morgan('dev'));
+if (process.env.NODE_ENV === 'dev') {
+  app.use(morgan('dev'));
+}
+
+// Middleware to serve files
+app.use(express.static(`${__dirname}/public`));
 
 // Middleware to modify incoming request i.e to add data from HTTP request to req object.
 // express.json() returns a functions that is added to the middleware stack.
