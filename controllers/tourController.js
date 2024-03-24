@@ -3,8 +3,28 @@ const fs = require('fs');
 // Code outside request handlers are executed only once, when the application is first
 // started on the server. So code outside request handlers are not a part if event loop.
 const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
+  fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
 );
+
+exports.checkId = (req, res, next, val) => {
+  if (val > tours.length - 1) {
+    res.status(404).json({
+      status: 'fail',
+      message: 'Invalid Id',
+    });
+  }
+  next();
+};
+
+exports.checkTourBody = (req, res, next) => {
+  if (!req.body.name || !req.body.price) {
+    res.status(400).json({
+      status: 'fail',
+      message: 'Invalid request body',
+    });
+  }
+  next();
+};
 
 exports.getAllTours = (req, res) => {
   res.status(200).json({
@@ -20,9 +40,9 @@ exports.getAllTours = (req, res) => {
 
 exports.getTour = (req, res) => {
   const id = +req.params.id;
-  const tour = tours.find((tour) => tour.id === id);
+  const tour = tours.find((t) => t.id === id);
 
-  if (id > tours.length - 1 || !tour) {
+  if (!tour) {
     return res.status(404).json({
       status: 'fail',
       message: 'Invalid Id',
@@ -39,21 +59,21 @@ exports.getTour = (req, res) => {
 
 exports.createTour = (req, res) => {
   const newTourId = tours[tours.length - 1].id + 1;
-  const newTour = Object.assign({ id: newTourId }, req.body);
+  const newTour = { id: newTourId, ...req.body };
   tours.push(newTour);
 
   fs.writeFile(
     `${__dirname}/../dev-data/data/tours-simple.json`,
     // Write strings to file, so convert object to string representation.
     JSON.stringify(tours),
-    (err) => {
+    () => {
       res.status(201).json({
         status: 'success',
         data: {
           tour: newTour,
         },
       });
-    }
+    },
   );
 };
 
