@@ -1,8 +1,7 @@
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
-// This will read the data from the .env file and save then in the node process.env object
-dotenv.config({ path: './.env' });
-
+dotenv.config({ path: './.env' }); // This will read the data from the .env file and save then in the node process.env object
 const app = require('./app');
 
 // This env variable is set by express
@@ -10,6 +9,54 @@ const app = require('./app');
 
 // This env variable is set by node
 // console.log(process.env);
+
+const uri = process.env.DATABASE.replace(
+  '<password>',
+  process.env.DATABASE_PASSWORD,
+);
+
+const clientOptions = {
+  serverApi: { version: '1', strict: true, deprecationErrors: true },
+};
+
+async function run() {
+  try {
+    // Create a Mongoose client with a MongoClientOptions object to set the Stable API version
+    await mongoose.connect(uri, clientOptions);
+    await mongoose.connection.db.admin().command({ ping: 1 });
+    console.log(
+      'Pinged your deployment. You successfully connected to MongoDB!',
+    );
+  } catch (error) {
+    console.dir(error);
+  }
+}
+run();
+
+const toursSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'A tour must have a name'],
+    unique: true,
+  },
+  rating: { type: Number, default: 4.5 },
+  price: { type: Number, require: [true, 'A tour must have a proce'] },
+});
+
+const Tour = mongoose.model('Tour', toursSchema);
+
+const testTour = new Tour({
+  name: 'Mt. Everest',
+  rating: 4.8,
+  price: 10000,
+});
+
+testTour
+  .save()
+  .then((doc) => {
+    console.log(doc);
+  })
+  .catch((err) => console.log(err));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
