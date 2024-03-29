@@ -1,80 +1,42 @@
-const fs = require('fs');
+const Tour = require('../models/tourModels');
 
-// Code outside request handlers are executed only once, when the application is first
+// Code outside request handlers (like the one below) are executed only once, when the application is first
 // started on the server. So code outside request handlers are not a part if event loop.
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
-);
-
-exports.checkId = (req, res, next, val) => {
-  if (val > tours.length - 1) {
-    res.status(404).json({
-      status: 'fail',
-      message: 'Invalid Id',
-    });
-  }
-  next();
-};
-
-exports.checkTourBody = (req, res, next) => {
-  if (!req.body.name || !req.body.price) {
-    res.status(400).json({
-      status: 'fail',
-      message: 'Invalid request body',
-    });
-  }
-  next();
-};
+// const tours = JSON.parse(
+//   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
+// );
 
 exports.getAllTours = (req, res) => {
   res.status(200).json({
     // This is coming from middleware.
     requestedTime: req.requestTime,
     status: 'success',
-    results: tours.length,
-    data: {
-      tours,
-    },
+    data: {},
   });
 };
 
 exports.getTour = (req, res) => {
-  const id = +req.params.id;
-  const tour = tours.find((t) => t.id === id);
-
-  if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'Invalid Id',
-    });
-  }
-
   res.status(200).json({
     status: 'success',
-    data: {
-      tour,
-    },
+    data: {},
   });
 };
 
-exports.createTour = (req, res) => {
-  const newTourId = tours[tours.length - 1].id + 1;
-  const newTour = { id: newTourId, ...req.body };
-  tours.push(newTour);
-
-  fs.writeFile(
-    `${__dirname}/../dev-data/data/tours-simple.json`,
-    // Write strings to file, so convert object to string representation.
-    JSON.stringify(tours),
-    () => {
-      res.status(201).json({
-        status: 'success',
-        data: {
-          tour: newTour,
-        },
-      });
-    },
-  );
+exports.createTour = async (req, res) => {
+  try {
+    const newTour = await Tour.create(req.body);
+    res.status(201).json({
+      status: 'success',
+      data: {
+        tour: newTour,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: 'Invalid data sent',
+    });
+  }
 };
 
 exports.updateTour = (req, res) => {

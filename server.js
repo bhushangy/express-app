@@ -33,31 +33,6 @@ async function run() {
 }
 run();
 
-const toursSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'A tour must have a name'],
-    unique: true,
-  },
-  rating: { type: Number, default: 4.5 },
-  price: { type: Number, require: [true, 'A tour must have a proce'] },
-});
-
-const Tour = mongoose.model('Tour', toursSchema);
-
-const testTour = new Tour({
-  name: 'Mt. Everest',
-  rating: 4.8,
-  price: 10000,
-});
-
-testTour
-  .save()
-  .then((doc) => {
-    console.log(doc);
-  })
-  .catch((err) => console.log(err));
-
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Express running on port ${port}!!`);
