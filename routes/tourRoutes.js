@@ -9,10 +9,10 @@ const {
 
 const router = express.Router();
 
-router.use((req, res, next) => {
-  console.log('I am a middleware local to this route');
-  next();
-});
+// router.use((req, res, next) => {
+//   console.log('I am a middleware local to this route');
+//   next();
+// });
 
 // Param middleware that only runs for tour routes that have id as path param.
 // router.param('id', checkId);
