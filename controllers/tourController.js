@@ -19,7 +19,15 @@ exports.getAllTours = async (req, res) => {
 
     // If you do not pass any object to find, it will return all the documents in the collection.
     // Build query.
-    const query = Tour.find(JSON.parse(queryStr));
+    let query = Tour.find(JSON.parse(queryStr));
+
+    if (req.query.sort) {
+      const sortParam = req.query.sort.split(',').join(' ');
+      query = query.sort(sortParam);
+    } else {
+      // If there is no sort param in the api, by deafult sort by this field.
+      query = query.sort('-createdAt');
+    }
 
     // Execute query.
     const tours = await query;
