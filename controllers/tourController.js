@@ -8,8 +8,26 @@ const Tour = require('../models/tourModels');
 
 exports.getAllTours = async (req, res) => {
   try {
+    const queryParams = { ...req.query };
+    // Remove these params from the object.
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    excludedFields.forEach((field) => delete queryParams[field]);
+
+    let queryStr = JSON.stringify(queryParams);
+    // Replace all occurence of gte, gt... with $gte, $gt...
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
     // If you do not pass any object to find, it will return all the documents in the collection.
-    const tours = await Tour.find();
+    // Build query.
+    const query = Tour.find(JSON.parse(queryStr));
+
+    // Execute query.
+    const tours = await query;
+
+    // find methods returns an object of type query.
+    // find method returns a query object so that you can chain it with more queries.
+    // Tour.find().where('duration').equals(5).where('difficulty').equals('easy');
+
     res.status(200).json({
       // This is coming from middleware. i.e app level middleware.
       requestedTime: req.requestTime,
