@@ -27,7 +27,7 @@ const toursSchema = new mongoose.Schema({
     required: [true, 'A tour must have a summary'],
     trim: true,
   },
-  // trim removes white space at the beginning and end of the string.
+  // trim removes white space at the beginning and end of the string
   description: {
     type: String,
     trim: true,
@@ -39,8 +39,8 @@ const toursSchema = new mongoose.Schema({
   images: [String],
   createdAt: {
     type: Date,
-    default: Date.now(),
-    // If user does not send createdAt, the default value will be inserted in the document.
+    default: Date.now(), // If user does not send this, the default value will be inserted.
+    select: false, // Do not include this field in the api response.
   },
   startDates: [Date],
 });
