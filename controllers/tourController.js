@@ -37,6 +37,21 @@ exports.getAllTours = async (req, res) => {
       query = query.select('-__v');
     }
 
+    // Pagination
+    const page = +req.query.page || 1;
+    const limit = +req.query.limit || 100;
+    // Skip these many records. If page is 5 and limit is 10, then it is records 41 - 50.
+    // So skip 40 records to display 5th page records.
+    const skip = (page - 1) * limit;
+
+    query = query.skip(skip).limit(limit);
+
+    // If user inputs page number that is beyond the number of total documents.
+    if (req.query.page) {
+      const numTours = await Tour.countDocuments();
+      if (skip >= numTours) throw new Error('This page does not exist!!');
+    }
+
     // Execute query.
     const tours = await query;
 
