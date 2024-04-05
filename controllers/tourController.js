@@ -6,6 +6,15 @@ const Tour = require('../models/tourModels');
 //   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
 // );
 
+exports.aliasTopTours = async (req, res, next) => {
+  // Whatever you send as query param is ultimately a string even if you send it as a number is request body.
+  // Because it is ultimately added to the url which is a string.
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+  next();
+};
+
 exports.getAllTours = async (req, res) => {
   try {
     const queryParams = { ...req.query };
