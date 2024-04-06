@@ -116,3 +116,45 @@ exports.deleteTour = async (req, res) => {
     });
   }
 };
+
+exports.getTourStats = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      // match stage
+      { $match: { ratingsAverage: { $gte: 4.5 } } },
+      // group stage
+      {
+        $group: {
+          // The _id expression specifies the group key. If you specify an _id value of null,
+          // or any other constant value, the $group stage returns a single document that
+          // aggregates values across all of the input documents.
+          _id: { $toUpper: '$difficulty' },
+          num: { $sum: 1 },
+          numRatings: { $sum: '$ratingsQuantity' },
+          avgRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+      {
+        $sort: {
+          // After stage 2, you cannot use fields of original document.
+          // You can only use fields present in document from stage 2.
+          avgPrice: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      stats,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: 'fail',
+      message: 'Invalid data sent',
+    });
+  }
+};
