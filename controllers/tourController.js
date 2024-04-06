@@ -121,7 +121,13 @@ exports.getTourStats = async (req, res) => {
   try {
     const stats = await Tour.aggregate([
       // match stage
-      { $match: { ratingsAverage: { $gte: 4.5 } } },
+      {
+        $match: {
+          ratingsAverage: {
+            $gte: 4.7,
+          },
+        },
+      },
       // group stage
       {
         $group: {
@@ -149,6 +155,66 @@ exports.getTourStats = async (req, res) => {
     res.status(200).json({
       status: 'success',
       stats,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      status: 'fail',
+      message: 'Invalid data sent',
+    });
+  }
+};
+
+exports.getMonthlyPlan = async (req, res) => {
+  try {
+    const year = +req.params.year;
+
+    const plan = await Tour.aggregate([
+      {
+        // $unwind creates a document for each value in the startDates array.
+        // So you will get the same tour as a separate document with different start dates.
+        $unwind: '$startDates',
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          // $month extracts month from the ISO date.
+          _id: { $month: '$startDates' },
+          numOfTourStarts: { $sum: 1 },
+          // $push creates an array and pushes the name field.
+          tours: { $push: '$name' },
+        },
+      },
+      {
+        // Add field month with value of field _id to all documents.
+        $addFields: { month: '$_id' },
+      },
+      {
+        // Remove field _id from all documents.
+        $project: {
+          _id: 0,
+        },
+      },
+      {
+        // Sort by numOfTourStarts in descending order.
+        $sort: { numOfTourStarts: -1 },
+      },
+      {
+        // Limit the number of documents.
+        $limit: 12,
+      },
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      plan,
     });
   } catch (error) {
     console.log(error);
