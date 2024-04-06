@@ -1,5 +1,5 @@
 const Tour = require('../models/tourModels');
-
+const ApiFeatures = require('../utils/apiFeatures');
 // Code outside request handlers (like the one below) are executed only once, when the application is first
 // started on the server. So code outside request handlers are not a part if event loop.
 // const tours = JSON.parse(
@@ -17,56 +17,17 @@ exports.aliasTopTours = async (req, res, next) => {
 
 exports.getAllTours = async (req, res) => {
   try {
-    const queryParams = { ...req.query };
-    // Remove these params from the object.
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach((field) => delete queryParams[field]);
-
-    let queryStr = JSON.stringify(queryParams);
-    // Replace all occurence of gte, gt... with $gte, $gt...
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-
-    // If you do not pass any object to find, it will return all the documents in the collection.
-    // Build query.
-    let query = Tour.find(JSON.parse(queryStr));
-
-    if (req.query.sort) {
-      const sortParam = req.query.sort.split(',').join(' ');
-      query = query.sort(sortParam);
-    } else {
-      // If there is no sort param in the api, by deafult sort by this field.
-      query = query.sort('-createdAt');
-    }
-
-    // Return only these fields in the response.
-    if (req.query.fields) {
-      const fields = req.query.fields.split(',').join(' ');
-      query = query.select(fields);
-    } else {
-      query = query.select('-__v');
-    }
-
-    // Pagination
-    const page = +req.query.page || 1;
-    const limit = +req.query.limit || 100;
-    // Skip these many records. If page is 5 and limit is 10, then it is records 41 - 50.
-    // So skip 40 records to display 5th page records.
-    const skip = (page - 1) * limit;
-
-    query = query.skip(skip).limit(limit);
-
-    // If user inputs page number that is beyond the number of total documents.
-    if (req.query.page) {
-      const numTours = await Tour.countDocuments();
-      if (skip >= numTours) throw new Error('This page does not exist!!');
-    }
-
-    // Execute query.
-    const tours = await query;
-
-    // find methods returns an object of type query.
+    // find method returns an object of type query.
     // find method returns a query object so that you can chain it with more queries.
     // Tour.find().where('duration').equals(5).where('difficulty').equals('easy');
+    const features = new ApiFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .selectFields()
+      .pagination();
+
+    // Execute query.
+    const tours = await features.query;
 
     res.status(200).json({
       // This is coming from middleware. i.e app level middleware.
@@ -77,6 +38,7 @@ exports.getAllTours = async (req, res) => {
       },
     });
   } catch (error) {
+    console.log(error);
     res.status(404).json({
       status: 'fail',
       message: error,
