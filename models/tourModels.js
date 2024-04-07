@@ -1,3 +1,4 @@
+/* eslint-disable prefer-arrow-callback */
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 
@@ -46,6 +47,10 @@ const toursSchema = new mongoose.Schema(
       select: false, // Do not include this field in the api response.
     },
     startDates: [Date],
+    secretTour: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     toJSON: { virtuals: true },
@@ -60,14 +65,33 @@ toursSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
-// Middleware to run before save event i.e before document is saved in db. i.e on Tour.create and Tour.save
+// Dcoument middleware to run before save event i.e before document is saved in db. i.e on Tour.create and Tour.save
 toursSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
 
-// Middleware run after document is saved into db.
+// Dcoument middleware run after document is saved into db.
 toursSchema.post('save', function (doc, next) {
+  // this points to the document that was saved into the db.
+  next();
+});
+
+// Query middleware to run before running the Tour.find or Tour.findOne method.
+// /ˆfind/ is regexp for strings that start with find.
+toursSchema.pre(/^find/, function (next) {
+  // this points to the query object and not the document.
+  // This query is executed just before await query.execute in the controller.
+  this.find({ secretTour: { $ne: true } });
+  this.start = Date.now();
+  next();
+});
+
+// Query middleware to run after running the Tour.find or Tour.findOne method.
+toursSchema.post(/^find/, function (docs, next) {
+  // docs is the result of the query.
+  // this is still pointing to the query.
+  console.log(`Query took ${Date.now() - this.start} ms`);
   next();
 });
 
