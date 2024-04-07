@@ -1,6 +1,7 @@
 /* eslint-disable prefer-arrow-callback */
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+// const validator = require('validator'); // External library to validate strings
 
 const toursSchema = new mongoose.Schema(
   {
@@ -11,6 +12,7 @@ const toursSchema = new mongoose.Schema(
       trim: true,
       maxlength: [40, 'A tour must have less than 40 characters'],
       minlength: [10, 'A tour must have more than 10 characters'],
+      // validate: [validator.isAlpha, 'Tour name must only contain characters'],
     },
     slug: String,
     duration: {
@@ -36,6 +38,18 @@ const toursSchema = new mongoose.Schema(
     },
     ratingsQuantity: { type: Number, default: 0 },
     price: { type: Number, required: [true, 'A tour must have a price'] },
+    priceDiscount: {
+      type: Number,
+      validate: {
+        validator: function (val) {
+          // val is the user input
+          // this points to the current document and only works for new document and not update.
+          // Note: This validator does not work for update.
+          return val < this.price;
+        },
+        message: 'Discount price must be less than regular price',
+      },
+    },
     summary: {
       type: String,
       required: [true, 'A tour must have a summary'],
