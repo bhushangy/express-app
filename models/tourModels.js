@@ -95,6 +95,15 @@ toursSchema.post(/^find/, function (docs, next) {
   next();
 });
 
+// Aggregation middleware to run before running the Tour.aggregate method.
+toursSchema.pre('aggregate', function (next) {
+  // this is pointing to the aggregation object which has the pipeline field
+  // which is an array of all the pipeline stages in Tour.aggregate() method.
+  // Add another match stage at the beginning of the pipeline to only match docs that are not true.
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  next();
+});
+
 const Tour = mongoose.model('Tour', toursSchema);
 
 module.exports = Tour;
