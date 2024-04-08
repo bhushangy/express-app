@@ -5,6 +5,9 @@ const morgan = require('morgan');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 
+const globalErrorHandler = require('./controllers/errorController');
+const AppError = require('./utils/appError');
+
 // invoking express adds a bunch of methods on the app object.
 const app = express();
 
@@ -35,25 +38,14 @@ app.use('/api/v1/users', userRouter);
 
 // Handle incorrect routes by adding this middleware at the end of the middleware stack.
 app.all('*', (req, res, next) => {
-  const err = new Error(`Cannot find route ${req.originalUrl}`);
-  err.status = 'fail';
-  err.statusCode = 404;
   // So whenever you pass an argument into next(‘error’), express automatically assumes
   // that there was an error, and it skips all the middleware in the middleware stack and
   // send the argument that you passed to the global error handling middleware.
-  next(err);
+  next(new AppError(`Cannot find route ${req.originalUrl}`, 404));
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
-
-  res.status(err.statusCode).json({
-    status: err.status,
-    message: err.message,
-  });
-});
+app.use(globalErrorHandler);
 
 module.exports = app;
 
