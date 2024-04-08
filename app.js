@@ -33,6 +33,14 @@ app.use((req, res, next) => {
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
+// Handle incorrect routes by adding this middleware at the end of the middleware stack.
+app.all('*', (req, res) => {
+  res.status(404).json({
+    status: 'fail',
+    message: `Cannot find route ${req.originalUrl}`,
+  });
+});
+
 module.exports = app;
 
 // PUT - You expect the entire object that needs to be updated. The object received will replace the existing one.
