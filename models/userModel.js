@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please provide a password'],
         minlength: 8,
+        select: false, // Exclude this field from all selct/find/findOne queries
     },
     passwordConfirm: {
         type: String,
@@ -46,6 +47,16 @@ userSchema.pre('save', async function (next) {
     this.passwordConfirm = undefined;
     next();
 });
+
+// Instance methods - methods that are available on all the documents of a schema
+userSchema.methods.validatePassword = async function (
+    candidatePassword,
+    userPassword,
+) {
+    // candidate password - password entered by user during login.
+    // user password - passwor entered by user during signup.
+    return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 const User = mongoose.model('User', userSchema);
 

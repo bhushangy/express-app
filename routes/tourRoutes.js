@@ -9,6 +9,7 @@ const {
   deleteTour,
   getMonthlyPlan,
 } = require('../controllers/tourController');
+const { protect } = require('../controllers/authController');
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ const router = express.Router();
 // Param middleware that only runs for tour routes that have id as path param.
 // router.param('id', checkId);
 
-router.route('/').get(getAllTours).post(createTour);
+router.route('/').get(protect, getAllTours).post(createTour);
 
 router.route('/top-5-cheap').get(aliasTopTours, getAllTours);
 
