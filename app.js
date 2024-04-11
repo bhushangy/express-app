@@ -28,6 +28,7 @@ app.use(express.json());
 // then it wont execute because the request handler ends the req-res cycle with res.send().
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
+
   //console.log(x) - Reference Error
   // Any unknown, unhanlded exception in code, occuring inside any middleware, express transfers control to error handling middleware.
   next();
