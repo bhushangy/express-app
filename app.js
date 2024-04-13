@@ -1,6 +1,7 @@
 // express is a function
 const express = require('express');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
@@ -16,6 +17,15 @@ const app = express();
 if (process.env.NODE_ENV === 'dev') {
   app.use(morgan('dev'));
 }
+
+// Rate limiter middleware
+const rateLimiter = rateLimit({
+  max: 100, // Allow 100 requests from an IP in an hour
+  windowMs: 60 * 60 * 1000,
+  message: 'You have exceeded your quota. Try again after an hour!!',
+});
+
+app.use(rateLimiter);
 
 // Middleware to serve files
 app.use(express.static(`${__dirname}/public`));
