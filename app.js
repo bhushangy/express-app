@@ -2,6 +2,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
@@ -11,6 +12,9 @@ const AppError = require('./utils/appError');
 
 // invoking express adds a bunch of methods on the app object.
 const app = express();
+
+// Set certain important http security headers in the response object.
+app.use(helmet());
 
 // Morgan is the loggin middleware. Calling morgan() function returns another middleware function
 // that is added to the middleware stack.
@@ -32,7 +36,11 @@ app.use(express.static(`${__dirname}/public`));
 
 // Middleware to modify incoming request i.e to add data from HTTP request to req object.
 // express.json() returns a functions that is added to the middleware stack.
-app.use(express.json());
+app.use(
+  express.json({
+    limit: '10kb', // Limit the request body size to 10kb
+  }),
+);
 
 // Order of defining middlewares is important. If this middleware is defined after request handlers,
 // then it wont execute because the request handler ends the req-res cycle with res.send().
