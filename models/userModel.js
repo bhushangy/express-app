@@ -24,7 +24,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please provide a password'],
         minlength: 8,
-        select: false, // Exclude this field from all selct/find/findOne queries
+        select: false, // Exclude this field from all selct/find/findOne queries.
+        // Note that you will still get these fields on save. i.e after creating a new user.
+        // Then you have to manually set these fields to undefined in the document in the controller.
     },
     passwordConfirm: {
         type: String,
