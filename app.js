@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitise = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const hpp = require('hpp');
 
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
@@ -17,6 +18,8 @@ const app = express();
 
 // Set certain important http security headers in the response object.
 app.use(helmet());
+
+app.disable('x-powered-by');
 
 // Morgan is the loggin middleware. Calling morgan() function returns another middleware function
 // that is added to the middleware stack.
@@ -51,6 +54,20 @@ app.use(mongoSanitise());
 // Prevent malicious HTML injection code. Scans user input and filters any malicious
 // javascript that could be executedserver side html code. Basically it prevent inserting script tags as inputs.
 app.use(xss());
+
+// Query string sanitisation - Clears duplicate fields in query string except white listed params.
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  }),
+);
 
 // Order of defining middlewares is important. If this middleware is defined after request handlers,
 // then it wont execute because the request handler ends the req-res cycle with res.send().
