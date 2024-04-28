@@ -154,6 +154,17 @@ toursSchema.pre(/^find/, function (next) {
   next();
 });
 
+toursSchema.pre(/^find/, function (next) {
+  // Populate the guides field with the actual user data by using the reference. Remove __v and passwordChangedAt fields from the output.
+  // Behind the scenes, populate creates a new query to get the data from the referenced document. So, it is better to use it only when needed.
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
+
+  next();
+});
+
 // Query middleware to run after running the Tour.find or Tour.findOne method.
 toursSchema.post(/^find/, function (docs, next) {
   // docs is the result of the query.
