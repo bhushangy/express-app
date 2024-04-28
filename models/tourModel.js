@@ -101,9 +101,16 @@ const toursSchema = new mongoose.Schema(
         day: Number,
       },
     ],
+    guides: [
+      {
+        // This tells us that the type of each object in the guides array is an mongoDB ObjectId.
+        type: mongoose.Schema.ObjectId,
+        ref: 'User', // Refer to the User model for the ObjectId.
+      },
+    ],
   },
   {
-    toJSON: { virtuals: true },
+    toJSON: { virtuals: true }, // This will include virtual properties in the api response.
     toObject: { virtuals: true },
   },
 );
@@ -126,6 +133,16 @@ toursSchema.post('save', function (doc, next) {
   // this points to the document that was saved into the db.
   next();
 });
+
+// When you embed the user documents in the tour document, it may cause problems during update.
+// Because if the user document is updated, all the tours that have that user will also have to be updated.
+// So, it is better to use reference to the user document.
+
+// toursSchema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromises);
+//   next();
+// });
 
 // Query middleware to run before running the Tour.find or Tour.findOne method.
 // /ˆfind/ is regexp for strings that start with find.
