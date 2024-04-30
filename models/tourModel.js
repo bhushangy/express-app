@@ -116,7 +116,7 @@ const toursSchema = new mongoose.Schema(
 );
 
 // You cannot use virtual properties in a query since it is not stored in db.
-// Thet are only added during get calls.
+// They are only added during get calls.
 toursSchema.virtual('durationWeeks').get(function () {
   // this is poiting to the current document object.
   return this.duration / 7;
